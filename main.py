@@ -1,71 +1,104 @@
 from discord.ext import commands
-from time import time
+import traceback
+import datetime
 import discord
-import json
+import logging
+import asyncio
+import config
 import random
-
-js = json.load(open("config.json", "r+", encoding='utf-8'))
-
-
-client = commands.Bot(command_prefix=js["prefix"], intents=discord.Intents.all())
-
-# Изменение статуса бота
-@client.event
-async def on_connect():
-	print(js['prefix'])
-	await client.change_presence(status = discord.Status.idle, activity = discord.Game("DurkaHub"))
-
-# Команда clear
-@client.command(name="удали", help="Удаляет определенное кол-во сообщений.")
-async def clear(ctx, amount = 100):
-	await ctx.channel.purge(limit = amount)
-	if amount == 1:
-		await ctx.send("Я удалила " + str(amount) + " сообщение.")
-	elif 1 < amount < 5:
-		await ctx.send("Я удалила " + str(amount) + " сообщения.")
-	elif 5 < amount:
-		await ctx.send("Я удалила " + str(amount) + " сообщений.")
+import time
+import os
 
 
-# Команда send
-@client.command(name="отправь", help="Отправляет сообщение от имени бота.")
-async def send(ctx, *, args):
-	await ctx.send(args)
+__version__ = "0.1"
+
+log = logging.getLogger("discord")
+logging.basicConfig(level=config.logLevel)
 
 
-# Команда prefix
-@client.command(name="префикс", help="Показывает доступные префиксы.")
-async def prefix(ctx):
-	await ctx.channel.send(f'`{js["prefix"]}`')
+class ExtClient(commands.AutoShardedBot):
+
+	def __init__(self):
+		intents = discord.Intents.default()
+
+		super().__init__(command_prefix=config.prefix, intents=intents)
+
+	async def random_activity(self):
+		while True:
+			members = list(self.get_all_members())
+			memberCount = len(members)
+			randomMember = random.choice(members)
+			randomGame = random.choice(config.games)
+			await self.change_presence(activity=discord.Activity(type=randomGame[0], name=randomGame[1].format(memberCount = memberCount, randomMember=randomMember)))
+			await self.on_activity_changed()
+			await asyncio.sleep(config.gamesDelay)
+
+	async def on_activity_changed(self):
+		pass
+
+	async def on_ready(self):
+		self.startTime = time.time()
+		self.botVersion = __version__
+		self.appInfo = await self.application_info()
+
+		log.info(f"Bot-Name: {self.user}")
+		log.info(f"Bot-ID: {self.user.id}")
+		log.info(f"Bot-Owner: {self.appInfo.owner}")
+		log.info(f"Bot-Version: {self.botVersion}")
+		log.info(f"Bot-Start-Time: {self.startTime}")
+		log.info(f"Pycord-Version: {discord.__version__}")
+
+		await self.random_activity()
+
+	async def on_message(self, message: discord.Message):
+		pass
+
+	async def on_member_join(self, member):
+		pass
+
+	async def on_member_remove(self, member):
+		pass
+
+	async def on_guild_join(self, guild: discord.Guild):
+		embed = discord.Embed(title=":white_check_mark: The bot added to new guild", type="rich", color=0x2ecc71)
+
+		embed.set_thumbnail(url=guild.icon.url)
+		embed.add_field(name="Name", value=guild.name, inline=True)
+		embed.add_field(name="ID", value=guild.id, inline=True)
+		embed.add_field(name="Owner", value=f"{guild.owner} ({guild.owner.id})", inline=True)
+		embed.add_field(name="Region", value=guild.region, inline=True)
+		embed.add_field(name="Members", value=guild.member_count, inline=True)
+		embed.add_field(name="Created on", value=guild.created_at, inline=True)
+
+		await self.appInfo.owner.send(embed=embed)
+
+	async def on_guild_remove(self, guild: discord.Guild):
+		embed = discord.Embed(title=":x: The bot was kicked out of the guild", type="rich", color=0xe74c3c)
+
+		embed.set_thumbnail(url=guild.icon.url)
+		embed.add_field(name="Name", value=guild.name, inline=True)
+		embed.add_field(name="ID", value=guild.id, inline=True)
+		embed.add_field(name="Owner", value=f"{guild.owner} ({guild.owner.id})", inline=True)
+		embed.add_field(name="Region", value=guild.region, inline=True)
+		embed.add_field(name="Members", value=guild.member_count, inline=True)
+		embed.add_field(name="Created on", value=guild.created_at, inline=True)
+
+		await self.appInfo.owner.send(embed=embed)
+
+	async def on_error(self, event: str, *args, **kwargs):
+		embed = discord.Embed(title=":exclamation: Event Error", colour=0xe74c3c)
+
+		embed.add_field(name="Event", value=event)
+		embed.description = f"```py\n{traceback.format_exc()}\n```"
+		embed.timestamp = datetime.datetime.utcnow()
+
+		await self.appInfo.owner.send(embed=embed)
 
 
-@client.command(name="число c", help="Генерирует рандомное число с количеством символов")
-async def rint(ctx, amount):
-	msg = ''
-	for _ in range(int(amount)):
-		msg += str(random.randint(0, 9))
-	await ctx.channel.send(msg)
+	async def on_command_error(self):
+		pass
 
 
-@client.command(name="число", help="Генерирует рандомное число")
-async def rint(ctx, _from = 1, to = 100):
-	
-	await ctx.channel.send(str(random.randint(_from, to)))
-
-@client.command(name="помощь", help="Вызывает команду help")
-async def rint(ctx):
-	await ctx.send_help()
-
-
-@client.command(name="аватар", help="Отправляет аватарку из ID")
-async def rint(ctx, user: discord.User):
-	await ctx.channel.send(user.avatar_url)
-
-
-@client.command(name="аватарка", help="Отправляет аватарку через пинг")
-async def rint(ctx, user: discord.Member):
-	await ctx.channel.send(user.avatar_url)
-
-
-# Запуск бота
-client.run(js["token"])
+if __name__	== "__main__":
+	client = ExtClient()
+	client.run(config.token)
