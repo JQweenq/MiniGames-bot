@@ -7,7 +7,7 @@ PREFIX: str = os.getenv("PREFIX", ">")
 TOKEN: str | None = os.getenv("TOKEN", None)
 
 GAMES: list[typings.Game] = [
-  typings.Game(discord.ActivityType.playing, "with Josty"),
+  typings.Game(discord.ActivityType.playing, "with 1lfey"),
   typings.Game(discord.ActivityType.watching, "Hentai"),
   typings.Game(discord.ActivityType.listening, "{randomMember}")
 ]
