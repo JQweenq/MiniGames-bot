@@ -28,7 +28,7 @@ class Utils(commands.Cog):
 
     embed = discord.Embed(title=":information_source: Information about this bot:", color=ctx.me.top_role.colour)
 
-    embed.description = "You can find the source code [there](https://github.com/JQweenq/discord_bot)"
+    embed.description = "You can find the source code [there](https://github.com/ilfey/Simple-bot)"
 
     embed.set_thumbnail(url=ctx.me.avatar.url)
 
