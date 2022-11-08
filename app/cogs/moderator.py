@@ -11,7 +11,7 @@ class Moderator(commands.Cog):
   def __init__(self, bot: typings.ExtBotType) -> None:
     self.bot = bot
 
-  @commands.command()
+  @commands.command(aliases=["cls"])
   @commands.has_permissions(manage_messages=True)
   async def clear(self, ctx: discord.ApplicationContext, amount: int = 100) -> None:
     await ctx.channel.purge(limit=amount)

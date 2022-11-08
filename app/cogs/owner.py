@@ -20,9 +20,9 @@ class Owner(commands.Cog):
     self.bot.clear()
     sys.exit(0)
 
-  @commands.command()
+  @commands.command(aliases=["sa"])
   @commands.is_owner()
-  async def avatar(self, ctx: discord.ApplicationContext, url: discord.Option(str, "Enter new avatar link.")) -> None:
+  async def set_avatar(self, ctx: discord.ApplicationContext, url: str) -> None:
     async with aiohttp.ClientSession() as session:
       async with session.get(''.join(url)) as img:
         await self.bot.user.edit(avatar=await img.read())
@@ -32,9 +32,9 @@ class Owner(commands.Cog):
 
     await ctx.send(f":relaxed: I've a new avatar!\n{self.bot.user.avatar.url}")
 
-  @commands.command()
+  @commands.command(aliases=["su"])
   @commands.is_owner()
-  async def username(self, ctx: discord.ApplicationContext, username: discord.Option(str, "Enter new username.")) -> None:
+  async def set_username(self, ctx: discord.ApplicationContext, username: str) -> None:
     await self.bot.user.edit(username=username)
     await ctx.send(f":relaxed: I've a new username! {self.bot.user}")
 
