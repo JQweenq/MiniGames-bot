@@ -10,7 +10,7 @@ import discord
 from app import config
 from app import typings
 
-__version__ = "0.3"
+__version__ = "0.4"
 
 log = logging.getLogger("discord")
 logging.basicConfig(level=config.LOGLEVEL)
